@@ -182,6 +182,42 @@ def processArguments(argstring):
     return True
 
 
+def collectTools(objectslist):
+    """Scan through all objects and collect tool information including descriptions"""
+    tools_dict = {}  # Dictionary to store tool number -> tool info
+
+    def scanPath(pathobj, label=""):
+        if hasattr(pathobj, "Group"):  # Compound object
+            for p in pathobj.Group:
+                scanPath(p, p.Label if hasattr(p, "Label") else "")
+        elif hasattr(pathobj, "Path"):  # Simple path
+            commands = PathUtils.getPathWithPlacement(pathobj).Commands
+            tool_description = ""
+
+            for i, c in enumerate(commands):
+                # Capture message commands (tool descriptions)
+                if c.Name == "message":
+                    if "Parameters" in dir(c) and "Message" in c.Parameters:
+                        tool_description = c.Parameters["Message"]
+
+                # Look for M6 (tool change)
+                if c.Name == "M6" and "T" in c.Parameters:
+                    tool_num = c.Parameters["T"]
+                    if tool_num not in tools_dict:
+                        # Store the operation label, tool description, and tool number
+                        tools_dict[tool_num] = {
+                            "operation": label,
+                            "description": tool_description if tool_description else label,
+                            "tool_num": tool_num
+                        }
+                    tool_description = ""  # Reset for next tool
+
+    for obj in objectslist:
+        scanPath(obj, obj.Label if hasattr(obj, "Label") else "")
+
+    return tools_dict
+
+
 def export(objectslist, filename, argstring):
     processArguments(argstring)
     global UNITS
@@ -212,11 +248,24 @@ def export(objectslist, filename, argstring):
     if myMachine is None:
         FreeCAD.Console.PrintWarning("No machine found in this selection\n")
 
+    # Collect tools before writing preamble
+    tools_dict = collectTools(objectslist)
+
     # write header
     if OUTPUT_HEADER:
         gcode += "(Exported by FreeCAD)\n"
         gcode += "(Post Processor: " + __name__ + ")\n"
         gcode += "(Output Time:" + str(now) + ")\n"
+
+    # Write tool list
+    if tools_dict:
+        gcode += "(Tool List:)\n"
+        for tool_num in sorted(tools_dict.keys()):
+            tool_info = tools_dict[tool_num]
+            gcode += "(Tool T{}: {} // {})\n".format(tool_num,tool_info["operation"],tool_info["description"])
+            #gcode += "({})\n".format(tool_info["description"])
+            #gcode += "M6 T{}\n".format(tool_num)
+        gcode += "\n"
 
     # Write the preamble
     if OUTPUT_COMMENTS:
