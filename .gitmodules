@@ -1,0 +1,3 @@
+[submodule "CAM_Post_Processors/Freecad/Macros/FreeCAD_Macros"]
+	path = CAM_Post_Processors/Freecad/Macros/FreeCAD_Macros
+	url = git@github.com:tarman3/FreeCAD_Macros.git

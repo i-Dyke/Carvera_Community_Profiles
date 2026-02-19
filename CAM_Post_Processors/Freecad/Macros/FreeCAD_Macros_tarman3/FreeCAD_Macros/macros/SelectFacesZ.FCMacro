@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+
+__title__ = "Select faces with equal Z"
+__doc__ = ""
+__url__ = "https://forum.freecad.org/viewtopic.php?t=96486"
+
+
+import FreeCADGui
+import Part
+import Path
+
+
+print()
+print("<<< Macro selecting faces with equal Z >>>")
+
+
+tol = 0.01
+
+isRoughly = Path.Geom.isRoughly
+
+def main(selExList):
+    for sel in selExList:
+        obj = sel.Object
+        for face in sel.SubObjects:
+            if not isinstance(face, Part.Face):
+                continue
+
+            targetZ = face.CenterOfMass.z
+            names = [
+                f"Face{i + 1}" for i, f in enumerate(obj.Shape.Faces)
+                if isRoughly(f.BoundBox.ZLength, 0, tol) and isRoughly(f.CenterOfMass.z, targetZ, tol)
+            ]
+            print(f"    Found {len(names)} faces near Z = {targetZ} \u00B1 {tol}")
+            FreeCADGui.Selection.addSelection(obj, names)
+
+
+selection = FreeCADGui.Selection.getSelectionEx()
+
+if selection:
+    FreeCADGui.Selection.clearSelection()
+    main(selection)
+else:
+    print("    Nothing selected")

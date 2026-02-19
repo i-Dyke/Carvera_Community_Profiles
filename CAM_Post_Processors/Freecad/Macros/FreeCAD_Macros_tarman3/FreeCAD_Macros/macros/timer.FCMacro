@@ -1,0 +1,14 @@
+
+__title__ = "Timer"
+
+from PySide import QtCore
+
+
+def test():
+    print('running')
+
+
+timer = QtCore.QTimer()
+timer.timeout.connect(test)
+timer.start(250)
+

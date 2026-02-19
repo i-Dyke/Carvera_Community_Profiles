@@ -1,0 +1,49 @@
+
+__title__ = "Mill shape with turn axis"
+__doc__ = "Add turn to each command"
+__url__ = "https://forum.freecad.org/viewtopic.php?t=99901"
+
+import FreeCADGui
+import Path
+
+
+turnAxisName = "A"  # Name turn axis
+mainAxisName = "Y"  # Name axis along piece
+slaveAxisName = "X" if mainAxisName == "Y" else "Y"
+
+stepsPerTurn = 3  # need split turn at least by 3 to get full turn and continuous rotation of axis
+turnStep = 360 / stepsPerTurn
+turnDir = -1
+
+def main(pathShape):
+    commands = []
+    angle = 0 if turnDir == 1 else 360
+    for cmd in pathShape.Path.Commands:
+
+        if cmd.y is not None:
+            angle = (angle + turnStep*turnDir) % 360
+            cmd.A = angle
+            if cmd.Name in ("G2", "G3"):
+                cmd = Path.Command("G1", {"A": angle, "X": cmd.x, "Y": cmd.y, "Z": cmd.z})
+
+        commands.append(cmd)
+
+    op = Path.Op.Custom.Create("LathePathShape")
+    op.Label = f"Lathe{pathShape.Label}"
+    res = Path.Op.Gui.Custom.Command.res
+    op.ViewObject.Proxy = Path.Op.Gui.Custom.PathOpGui.ViewProvider(op.ViewObject, res)
+    op.Gcode = [cmd.toGCode() for cmd in commands]
+    op.ViewObject.Visibility = False
+    op.ViewObject.Selectable = False
+    op.ViewObject.Proxy.deleteOnReject = False
+    op.recompute()
+
+    print(f"Created path for Lathe:\n{" "*14}Original operation: {pathShape.Label}\n{" "*14}Lathe path:{" "*9}{op.Label}\n{" "*14}Segmentation:{" "*7}{pathShape.Segmentation}")
+
+
+selection = FreeCADGui.Selection.getSelection()
+
+print()
+for obj in selection:
+    if "PathShape" in obj.Name:
+        main(obj)

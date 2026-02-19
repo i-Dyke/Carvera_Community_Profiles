@@ -1,0 +1,29 @@
+
+__title__ = "Macro selecting all edges from object"
+__doc__ = "Can be useful for Engrave operation, if you need to select a large number of edges instead of select whole object"
+__url__ = "https://forum.freecad.org/viewtopic.php?t=98116"
+
+
+import FreeCADGui
+
+
+def main(obj):
+    names = [f"Edge{i + 1}" for i, e in enumerate(obj.Shape.Edges)]
+    FreeCADGui.Selection.addSelection(obj, names)
+    print(f"    Found {len(names)} edges in object {obj.Label}")
+    if len(names) < 50:
+        print(f"\n{names}")
+
+
+print()
+print("<<< Macro selecting all edges from object >>>")
+
+
+selection = FreeCADGui.Selection.getSelection()
+
+if selection:
+    FreeCADGui.Selection.clearSelection()
+    for sel in selection:
+        main(sel)
+else:
+    print("    Nothing selected")

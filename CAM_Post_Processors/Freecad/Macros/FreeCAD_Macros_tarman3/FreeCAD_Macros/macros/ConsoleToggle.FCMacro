@@ -1,0 +1,39 @@
+
+__title__ = "Toggle panels Python console and Report view"
+__doc__ = "Selected objects sent to console and can be accessed by variables obj and objs"
+__url__ = "https://forum.freecad.org/viewtopic.php?t=94589"
+
+
+from PySide import QtGui
+
+mw=Gui.getMainWindow()
+
+panelConsole = mw.findChild(QtGui.QDockWidget, 'Python console')
+if not panelConsole:
+    panelConsole = mw.findChild(QtGui.QDockWidget, 'Python Console')
+
+panelReport = mw.findChild(QtGui.QDockWidget, 'Report view')
+if not panelReport:
+    panelReport = mw.findChild(QtGui.QDockWidget, 'Report View')
+
+if panelReport.isVisible() or panelConsole.isVisible():
+    panelReport.hide()
+    panelConsole.hide()
+else:
+    panelReport.show()
+    panelConsole.show()
+
+
+objs = FreeCADGui.Selection.getSelection()
+
+if objs:
+    cmd  = f'''objs = FreeCADGui.Selection.getSelection()
+print("{len(objs)} objects (objs) sent to console:")
+i=0
+for obj in objs:
+    print("   ", f"objs[{{i}}]", "   ",obj.Name, "   ", obj.TypeId, sep="")
+    i += 1
+print()
+print("List of objects is available by variable: objs")
+print("Last object is available by variable: obj", "\\n")'''
+    Gui.doCommandGui(cmd)

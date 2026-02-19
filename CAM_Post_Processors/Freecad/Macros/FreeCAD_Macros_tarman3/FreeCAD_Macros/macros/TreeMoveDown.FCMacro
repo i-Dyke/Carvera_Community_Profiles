@@ -1,0 +1,57 @@
+# -*- coding: utf-8 -*-
+
+__title__ = "Move down selected objects in group"
+__doc__ = ""
+__url__ = "https://forum.freecad.org/viewtopic.php?t=97244"
+
+
+import FreeCAD
+import FreeCADGui
+
+print()
+print("<<< Move down >>>")
+
+
+def moveDown(selections):
+    if not selections:
+        return "    Error 1: Selection is empty"
+
+    if len(selections[0].InList) == 0:
+        return "    Error 2: Selection not in group"
+
+    groups = [grp for grp in selections[0].InList if grp.TypeId == "App::DocumentObjectGroup"]
+
+    if len(groups) == 1:
+        group = groups[0]
+    else:
+        return "    Error 3: Can not determine group"
+
+    for sel in selections:
+        if sel not in group.Group:
+            return "    Error 4: Elements in different groups"
+
+    objects = [sel.Label for sel in selections]
+    print(f'    {", ".join(map(str, objects))}')
+
+    indexList = [group.Group.index(sel) for sel in selections]
+
+    newList = list(group.Group)
+
+    limitIndex = 0
+    for index in sorted(indexList, reverse=True):
+        limitIndex += 1
+        if index < len(group.Group) - limitIndex:
+            sel = group.Group[index]
+            newList.pop(index)
+            newList.insert(index+1, sel)
+
+    group.Group = newList
+
+    doc.recompute()
+
+
+doc = FreeCAD.ActiveDocument
+selections = FreeCADGui.Selection.getSelection()
+output = moveDown(selections)
+if output:
+    print(output)

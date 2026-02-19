@@ -1,0 +1,32 @@
+
+__title__ = "Select all faces of an object"
+__doc__ = ""
+__author__ = "OpenSource CNC"
+__url__ = "https://www.patreon.com/collection/657672"
+
+
+import FreeCADGui
+
+
+def main(obj):
+    names = [f"Face{i + 1}" for i, e in enumerate(obj.Shape.Faces)]
+    FreeCADGui.Selection.addSelection(obj, names)
+    print(f"    Found {len(names)} faces in object {obj.Label}")
+    if len(names) < 50:
+        print(f"\n{names}")
+
+
+print()
+print("<<< Macro selecting all faces from object >>>")
+
+
+selection = FreeCADGui.Selection.getSelection()
+
+
+if selection:
+    FreeCADGui.Selection.clearSelection()
+    for sel in selection:
+        main(sel)
+else:
+    print("    Nothing selected")
+

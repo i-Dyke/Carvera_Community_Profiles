@@ -1,0 +1,41 @@
+
+__title__ = "Export pseudo-gcode"
+__doc__ = "Save commands from inspect dialog to file"
+__url__ = "https://forum.freecad.org/viewtopic.php?t=99970"
+
+import FreeCAD
+import FreeCADGui
+import PathScripts.PathUtils as PathUtils
+import os
+import sys
+
+def main(obj):
+    doc = FreeCAD.activeDocument()
+    doc_filename = doc.FileName
+    dirname = os.path.dirname(doc_filename)
+    basename = os.path.basename(doc_filename).partition('.')[0]
+    filename = basename + '_' + obj.Label + '.nc'
+    #filename = obj.Label + '.nc'
+    file_path = os.path.join(dirname, filename)
+
+    path = PathUtils.getPathWithPlacement(obj)
+
+    gcode = path.toGCode()
+
+    with open(file_path, "w") as f:
+        f.write(gcode)
+
+    print(f"Export pseudo gcode:"
+          f"\n{" "*10}Operation: {obj.Label}"
+          f"\n{" "*10}File:      {file_path}"
+          f"\n{" "*10}Size       {len(gcode)}")
+
+
+selection = FreeCADGui.Selection.getSelection()
+
+if len(selection):
+    for obj in selection:
+        if obj.isDerivedFrom("Path::Feature") and len(obj.Path.Commands):
+            main(obj)
+else:
+    print("Nothing selected")

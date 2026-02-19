@@ -1,0 +1,39 @@
+
+__title__ = "Select inner edges from face"
+__doc__ = ""
+__url__ = "https://forum.freecad.org/viewtopic.php?t=98065"
+
+
+import FreeCADGui
+import Part
+
+
+def main(selelection):
+    for selEx in selelection:
+        obj = selEx.Object
+
+        for sub in selEx.SubObjects:
+            if not isinstance(sub, Part.Face):
+                continue
+
+            outerPoints = [v.Point for v in sub.OuterWire.Vertexes]
+            innerEdges = [e for e in sub.Edges for v in e.Vertexes if v.Point not in outerPoints]
+            innerEdgesHash = [e.hashCode() for e in innerEdges]
+            edges = obj.Shape.Edges
+            names = [f"Edge{i + 1}" for i, e in enumerate(edges) if e.hashCode() in innerEdgesHash]
+
+            FreeCADGui.Selection.addSelection(obj, names)
+
+            print(f"    Found {len(names)} edges in object {obj.Label}")
+
+
+selelection = FreeCADGui.Selection.getSelectionEx()
+
+print()
+print("<<< Macro selecting inner edges from face >>>")
+
+if selelection:
+    FreeCADGui.Selection.clearSelection()
+    main(selelection)
+else:
+    print("    Nothing selected")
