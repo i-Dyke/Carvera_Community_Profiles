@@ -110,8 +110,13 @@ else:
         baseOp = None
         print("  Error: Profile do not contain Path\n")
 
-    if baseOp and toolType.casefold() not in baseOp.ToolController.Tool.ShapeType.casefold():
-        print(f"  Warning: Tool shape is not {toolType}\n")
+    if baseOp:
+        try:
+            if toolType.casefold() not in baseOp.ToolController.Tool.ShapeType.casefold():
+                print(f"  Warning: Tool shape is not {toolType}\n")
+        except AttributeError:
+            # ShapeType attribute not available in this FreeCAD version
+            pass
 
     shapes = [s for s in sel if "Part" in s.Object.TypeId]
     wireProfile = None
