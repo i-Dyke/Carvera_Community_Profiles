@@ -257,6 +257,24 @@ def export(objectslist, filename, argstring):
         gcode += "(Post Processor: " + __name__ + ")\n"
         gcode += "(Output Time:" + str(now) + ")\n"
 
+        # Find and add job name by checking parent objects
+        # The job is typically the parent container of the operations
+        job_name = None
+
+        if objectslist:
+            # Check the first object for parent (Job container)
+            first_obj = objectslist[0]
+            if hasattr(first_obj, 'InList') and first_obj.InList:
+                # Get the first parent - this is typically the Job
+                parent = first_obj.InList[0]
+                if hasattr(parent, 'Label'):
+                    job_name = parent.Label
+
+        if job_name:
+            gcode += "(Job: " + job_name + ")\n"
+        else:
+            gcode += "(Job: Unknown)\n"
+
     # Write tool list
     if tools_dict:
         gcode += "(Tool List:)\n"
